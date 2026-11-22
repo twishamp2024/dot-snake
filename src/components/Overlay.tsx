@@ -33,7 +33,7 @@ export function Overlay({ ui, controller }: { ui: UiSnapshot; controller: GameCo
       break;
     case 'over':
       title = 'Game over';
-      detail = `${ui.deathCause === 'wall' ? 'You hit the wall.' : 'You ran into yourself.'} Score ${ui.score}`;
+      detail = `You ran into yourself. Score ${ui.score}`;
       action = { label: 'Play again', onClick: () => controller.restart() };
       break;
   }

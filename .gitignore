@@ -24,6 +24,9 @@ npm-debug.log*
 .DS_Store
 Thumbs.db
 
+# Local code-graph output (graphify)
+graphify-out/
+
 # Local Claude Code settings
 .claude/settings.local.json
 

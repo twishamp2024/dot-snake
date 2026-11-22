@@ -56,11 +56,45 @@ function circle(ctx: CanvasRenderingContext2D, x: number, y: number, r: number, 
   ctx.fill();
 }
 
-/** Where segment i is drawn this frame: sliding from its old cell to its new one. */
+/**
+ * Shortest signed step between two cells on a wrapping axis. A move from 14 to 0
+ * on a 15-wide board is +1 (through the edge), not -14 (back across the board).
+ */
+function wrappedDelta(from: number, to: number, n: number): number {
+  const d = to - from;
+  if (d > n / 2) return d - n;
+  if (d < -n / 2) return d + n;
+  return d;
+}
+
+/**
+ * Where segment i is drawn this frame: sliding from its old cell to its new one.
+ * While crossing an edge the result lies partly outside 0..n-1; drawWrapped()
+ * shows it leaving one side and entering the other.
+ */
 function segmentPosition(state: GameState, i: number, alpha: number): Point {
+  const n = state.config.gridSize;
   const cur = state.snake[i]!;
   const prev = state.prevSnake[i] ?? state.prevSnake[state.prevSnake.length - 1] ?? cur;
-  return { x: lerp(prev.x, cur.x, alpha), y: lerp(prev.y, cur.y, alpha) };
+  return {
+    x: prev.x + wrappedDelta(prev.x, cur.x, n) * alpha,
+    y: prev.y + wrappedDelta(prev.y, cur.y, n) * alpha,
+  };
+}
+
+/**
+ * Calls draw() at p and, when p hangs over an edge, again one board-width away
+ * on the opposite side. The canvas clips each copy, so a segment passing
+ * through a wall is split between the two edges.
+ */
+function drawWrapped(p: Point, n: number, draw: (x: number, y: number) => void) {
+  const xs = [p.x];
+  const ys = [p.y];
+  if (p.x > n - 1) xs.push(p.x - n);
+  if (p.x < 0) xs.push(p.x + n);
+  if (p.y > n - 1) ys.push(p.y - n);
+  if (p.y < 0) ys.push(p.y + n);
+  for (const x of xs) for (const y of ys) draw(x, y);
 }
 
 export function drawFrame(
@@ -105,24 +139,25 @@ export function drawFrame(
     const p = segmentPosition(state, i, alpha);
     const t = len <= 2 ? 0 : (i - 1) / (len - 2);
     const r = lerp(R.bodyStart, R.bodyEnd, t) * cell;
-    circle(ctx, center(p.x), center(p.y), r, mixRgb(THEME.bodyStart, THEME.bodyEnd, t, opacity));
+    const fill = mixRgb(THEME.bodyStart, THEME.bodyEnd, t, opacity);
+    drawWrapped(p, n, (x, y) => circle(ctx, center(x), center(y), r, fill));
   }
 
   if (len > 0) {
-    const p = segmentPosition(state, 0, alpha);
-    const hx = center(p.x);
-    const hy = center(p.y);
-    circle(ctx, hx, hy, R.head * cell, mixRgb(THEME.head, THEME.head, 0, opacity));
-
     const d = DIRECTION_VECTORS[state.direction];
     // Perpendicular to the heading, so the eyes sit side by side facing forward.
     const px = -d.y;
     const py = d.x;
-    for (const side of [-1, 1]) {
-      const ex = hx + d.x * R.eyeForward * cell + px * side * R.eyeSide * cell;
-      const ey = hy + d.y * R.eyeForward * cell + py * side * R.eyeSide * cell;
-      circle(ctx, ex, ey, R.eye * cell, THEME.eye);
-    }
+    drawWrapped(segmentPosition(state, 0, alpha), n, (x, y) => {
+      const hx = center(x);
+      const hy = center(y);
+      circle(ctx, hx, hy, R.head * cell, mixRgb(THEME.head, THEME.head, 0, opacity));
+      for (const side of [-1, 1]) {
+        const ex = hx + d.x * R.eyeForward * cell + px * side * R.eyeSide * cell;
+        const ey = hy + d.y * R.eyeForward * cell + py * side * R.eyeSide * cell;
+        circle(ctx, ex, ey, R.eye * cell, THEME.eye);
+      }
+    });
   }
 
   ctx.restore();

@@ -7,7 +7,8 @@ export interface Point {
 
 export type GameStatus = 'ready' | 'running' | 'paused' | 'over' | 'won';
 
-export type DeathCause = 'wall' | 'self' | null;
+/** The board edges wrap around, so running into your own body is the only way to lose. */
+export type DeathCause = 'self' | null;
 
 export interface GameConfig {
   /** Number of columns and rows; the board is square. */

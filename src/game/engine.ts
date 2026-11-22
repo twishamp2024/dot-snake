@@ -33,8 +33,8 @@ export const DIFFICULTIES: Record<Difficulty, GameConfig> = {
 
 export const samePoint = (a: Point, b: Point): boolean => a.x === b.x && a.y === b.y;
 
-export const isInside = (p: Point, gridSize: number): boolean =>
-  p.x >= 0 && p.y >= 0 && p.x < gridSize && p.y < gridSize;
+/** Wraps a coordinate onto the board, so leaving one edge enters the opposite one. */
+export const wrap = (v: number, gridSize: number): number => ((v % gridSize) + gridSize) % gridSize;
 
 /** Picks a random cell that the snake does not occupy, or null if the board is full. */
 export function spawnFood(snake: readonly Point[], gridSize: number, rng: Rng): Point | null {
@@ -113,19 +113,9 @@ export function step(state: GameState, rng: Rng = Math.random): GameState {
   if (!head) return state;
 
   const v = DIRECTION_VECTORS[direction];
-  const newHead: Point = { x: head.x + v.x, y: head.y + v.y };
   const { gridSize } = state.config;
-
-  if (!isInside(newHead, gridSize)) {
-    return {
-      ...state,
-      direction,
-      queue: [],
-      prevSnake: state.snake,
-      status: 'over',
-      deathCause: 'wall',
-    };
-  }
+  // The edges are portals: stepping off one side re-enters on the opposite side.
+  const newHead: Point = { x: wrap(head.x + v.x, gridSize), y: wrap(head.y + v.y, gridSize) };
 
   const eats = state.food !== null && samePoint(newHead, state.food);
   // When not eating, the tail leaves its cell this tick, so the head may move into it.

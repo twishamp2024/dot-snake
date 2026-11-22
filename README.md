@@ -12,7 +12,9 @@ keyboard.
 
 ## Features
 
-- Classic Snake on a 15 × 15 grid: eat the food to grow, avoid the walls and your own body.
+- Snake on a 15 × 15 grid: eat the food to grow and avoid your own body.
+- The edges wrap around: leave the board on one side and the snake slides back in on the opposite
+  side, so the only way to lose is to run into yourself.
 - Food only ever spawns on free cells; filling the whole board wins the game.
 - Progressive difficulty: every food makes the snake a little faster, down to a per-difficulty floor.
   Choose **Easy**, **Normal** or **Hard** before a game; the HUD shows the current speed level.

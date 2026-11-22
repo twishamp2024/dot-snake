@@ -185,17 +185,57 @@ describe('eating and growth', () => {
   });
 });
 
-describe('collisions', () => {
+describe('wrapping through the edges', () => {
   it.each([
-    ['right', { x: 14, y: 5 }],
-    ['left', { x: 0, y: 5 }],
-    ['up', { x: 5, y: 0 }],
-    ['down', { x: 5, y: 14 }],
-  ] as const)('ends the game when hitting the %s wall', (direction, head) => {
+    ['right', { x: 14, y: 5 }, { x: 0, y: 5 }],
+    ['left', { x: 0, y: 5 }, { x: 14, y: 5 }],
+    ['up', { x: 5, y: 0 }, { x: 5, y: 14 }],
+    ['down', { x: 5, y: 14 }, { x: 5, y: 0 }],
+  ] as const)('moving %s off the edge re-enters on the opposite side', (direction, head, expected) => {
     const s = step(game([head], null, { direction }));
+    expect(s.status).toBe('running');
+    expect(s.deathCause).toBeNull();
+    expect(s.snake[0]).toEqual(expected);
+  });
+
+  it('keeps the body in order while it passes through the edge', () => {
+    const snake = [
+      { x: 14, y: 3 },
+      { x: 13, y: 3 },
+      { x: 12, y: 3 },
+    ];
+    let s = game(snake, null, { direction: 'right' });
+    s = step(step(s));
+    expect(s.snake).toEqual([
+      { x: 1, y: 3 },
+      { x: 0, y: 3 },
+      { x: 14, y: 3 },
+    ]);
+  });
+
+  it('eats food that sits just across the edge', () => {
+    const s = step(game([{ x: 14, y: 7 }], { x: 0, y: 7 }, { direction: 'right' }), rngZero);
+    expect(s.score).toBe(1);
+    expect(s.snake).toEqual([
+      { x: 0, y: 7 },
+      { x: 14, y: 7 },
+    ]);
+  });
+});
+
+describe('collisions', () => {
+  it('ends the game when the head wraps into its own body', () => {
+    // Head at the right edge; the body occupies the cell on the left edge it would enter.
+    const snake = [
+      { x: 14, y: 4 },
+      { x: 14, y: 3 },
+      { x: 0, y: 3 },
+      { x: 0, y: 4 },
+      { x: 0, y: 5 },
+    ];
+    const s = step(game(snake, null, { direction: 'down', queue: ['right'] }));
     expect(s.status).toBe('over');
-    expect(s.deathCause).toBe('wall');
-    expect(s.snake[0]).toEqual(head);
+    expect(s.deathCause).toBe('self');
   });
 
   it('ends the game when the head runs into the body', () => {
@@ -239,8 +279,16 @@ describe('collisions', () => {
   });
 
   it('ignores input after game over', () => {
-    const over = step(game([{ x: 14, y: 5 }], null));
-    expect(queueDirection(over, 'up')).toBe(over);
+    const hook = [
+      { x: 2, y: 2 },
+      { x: 3, y: 2 },
+      { x: 3, y: 1 },
+      { x: 2, y: 1 },
+      { x: 1, y: 1 },
+    ];
+    const over = step(game(hook, null, { direction: 'left', queue: ['up'] }));
+    expect(over.status).toBe('over');
+    expect(queueDirection(over, 'down')).toBe(over);
     expect(togglePause(over)).toBe(over);
   });
 });
