@@ -5,7 +5,7 @@ dot grid, and a bright blue snake that tapers from its two-eyed head to its
 tail. Plays on phones, tablets, laptops and desktops with touch buttons or the
 keyboard.
 
-**Play it:** _VERCEL_URL_
+**Play it:** https://dot-snake.vercel.app
 **Source:** https://github.com/twishamp2024/dot-snake
 
 <p align="center"><img src="docs/reference.jpg" alt="Visual reference: blue dot snake on a black dot grid" width="320"></p>
@@ -111,7 +111,11 @@ settings:
 - Output directory: `dist`
 - Long-lived cache headers for hashed files in `/assets`
 
-Live URL: _VERCEL_URL_
+Live URL: https://dot-snake.vercel.app
+
+Production deployments are built by Vercel straight from the `main` branch of the GitHub repository.
+For automatic deploys on every push, connect the repository under the Vercel project's
+**Settings → Git** (this needs the Vercel GitHub app installed on the repository's account).
 
 To deploy your own copy, import the GitHub repository in the Vercel dashboard (the settings above
 are picked up automatically), or run `npx vercel --prod` from the project folder.
