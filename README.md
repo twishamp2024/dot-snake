@@ -113,9 +113,8 @@ settings:
 
 Live URL: https://dot-snake.vercel.app
 
-Production deployments are built by Vercel straight from the `main` branch of the GitHub repository.
-For automatic deploys on every push, connect the repository under the Vercel project's
-**Settings → Git** (this needs the Vercel GitHub app installed on the repository's account).
+The repository is connected to the Vercel project through the Vercel GitHub app: every push to `main`
+deploys to production automatically, and other branches and pull requests get preview deployments.
 
 To deploy your own copy, import the GitHub repository in the Vercel dashboard (the settings above
 are picked up automatically), or run `npx vercel --prod` from the project folder.
